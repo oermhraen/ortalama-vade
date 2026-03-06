@@ -10,14 +10,6 @@ st.set_page_config(
 # Yardımcı fonksiyonlar
 # -------------------------------------------------
 def parse_amount(text):
-    """
-    Kullanıcının girdiği değeri tam sayıya çevirir.
-    Örnek kabul:
-    1230000
-    1.230.000
-    1,230,000
-    1.230.000 TL
-    """
     if text is None:
         return 0
 
@@ -36,7 +28,6 @@ def parse_amount(text):
 
 
 def format_amount_input(value):
-    """Input kutusunda gösterilecek biçim: 1.230.000"""
     try:
         return f"{int(value):,}".replace(",", ".")
     except:
@@ -44,7 +35,6 @@ def format_amount_input(value):
 
 
 def format_tl(value):
-    """Sonuç alanında gösterilecek biçim: 1.230.000 TL"""
     try:
         return f"{int(round(value)):,}".replace(",", ".") + " TL"
     except:
@@ -95,11 +85,13 @@ def clear_all():
     ]
     st.session_state.counter = 2
 
+    # widget state temizliği
+    for key in list(st.session_state.keys()):
+        if key.startswith("amount_") or key.startswith("due_") or key.startswith("active_"):
+            del st.session_state[key]
+
 
 def normalize_amount_field(item_id):
-    """
-    Kullanıcı inputtan çıkınca değeri noktalı biçime çevirir.
-    """
     key = f"amount_{item_id}"
     raw_value = st.session_state.get(key, "")
     parsed = parse_amount(raw_value)
@@ -116,50 +108,67 @@ def normalize_amount_field(item_id):
 st.markdown("""
 <style>
 .block-container {
+    max-width: 1280px;
     padding-top: 0.8rem;
-    padding-bottom: 0.8rem;
-    max-width: 1450px;
+    padding-bottom: 1.2rem;
+}
+
+h1 {
+    margin-bottom: 0.8rem !important;
 }
 
 div[data-testid="stMetric"] {
     background: #f7f7f9;
     border: 1px solid #e5e7eb;
-    padding: 14px 16px;
+    padding: 12px 14px;
     border-radius: 12px;
 }
 
-.list-card, .side-card {
+.main-card, .side-card, .item-card {
     background: #ffffff;
     border: 1px solid #e5e7eb;
     border-radius: 14px;
-    padding: 14px 16px;
+}
+
+.main-card, .side-card {
+    padding: 14px;
+}
+
+.item-card {
+    padding: 12px;
+    margin-bottom: 12px;
 }
 
 .section-title {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 700;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
 }
 
-.row-divider {
-    border-bottom: 1px solid #f1f1f1;
-    margin: 8px 0 10px 0;
-}
-
-.row-no-box {
-    height: 38px;
+.item-top {
     display: flex;
+    justify-content: space-between;
     align-items: center;
+    margin-bottom: 8px;
     font-weight: 700;
     color: #1f2937;
 }
 
-.header-box {
-    height: 28px;
-    display: flex;
-    align-items: center;
+.item-label {
+    font-size: 13px;
     font-weight: 700;
-    color: #1f2937;
+    color: #374151;
+    margin-bottom: 4px;
+    margin-top: 2px;
+}
+
+.note-text {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.compact-space {
+    height: 6px;
 }
 
 div[data-testid="stTextInput"] > div,
@@ -168,121 +177,80 @@ div[data-testid="stDateInput"] > div {
 }
 
 div[data-testid="stCheckbox"] {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 38px;
     margin-top: 0 !important;
 }
 
-div[data-testid="stCheckbox"] label {
-    margin-bottom: 0 !important;
-}
-
 .stTextInput input, .stDateInput input {
-    height: 38px !important;
+    height: 42px !important;
 }
 
-.compact-note {
-    font-size: 13px;
-    color: #6b7280;
+@media (max-width: 768px) {
+    .block-container {
+        padding-top: 0.5rem;
+        padding-left: 0.7rem;
+        padding-right: 0.7rem;
+        padding-bottom: 1rem;
+    }
+
+    h1 {
+        font-size: 2.5rem !important;
+        line-height: 1.05 !important;
+        margin-bottom: 0.8rem !important;
+    }
+
+    .section-title {
+        font-size: 18px;
+        margin-bottom: 10px;
+    }
+
+    .main-card, .side-card {
+        padding: 12px;
+    }
+
+    .item-card {
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 12px;
+    }
+
+    .stButton > button {
+        height: 48px;
+        font-size: 18px;
+    }
+
+    .stTextInput input, .stDateInput input {
+        height: 46px !important;
+        font-size: 17px !important;
+    }
+
+    div[data-testid="stMetric"] {
+        padding: 10px 12px;
+    }
 }
 </style>
 """, unsafe_allow_html=True)
 
 # -------------------------------------------------
-# Başlık ve butonlar
+# Başlık
 # -------------------------------------------------
-st.title("Çek Ortalama Vade Hesaplayıcı")
+st.title("Çek Ortalama\nVade Hesaplayıcı")
 
-top1, top2, top3 = st.columns([1, 1, 5])
+# -------------------------------------------------
+# Üst butonlar
+# -------------------------------------------------
+b1, b2 = st.columns(2)
 
-with top1:
+with b1:
     if st.button("➕ Ekle", use_container_width=True):
         add_check()
         st.rerun()
 
-with top2:
+with b2:
     if st.button("🗑️ Temizle", use_container_width=True):
         clear_all()
         st.rerun()
 
-st.markdown("")
-
-# -------------------------------------------------
-# Ana layout
-# -------------------------------------------------
-left_col, right_col = st.columns([2.4, 1], gap="large")
-
-# -------------------------------------------------
-# Sol panel - Çek listesi
-# -------------------------------------------------
-with left_col:
-    st.markdown('<div class="list-card">', unsafe_allow_html=True)
-    st.markdown('<div class="section-title">Çek Listesi</div>', unsafe_allow_html=True)
-
-    h1, h2, h3, h4 = st.columns([0.7, 2.4, 1.7, 0.7], vertical_alignment="center")
-    h1.markdown('<div class="header-box">Sıra</div>', unsafe_allow_html=True)
-    h2.markdown('<div class="header-box">Tutar (TL)</div>', unsafe_allow_html=True)
-    h3.markdown('<div class="header-box">Vade Tarihi</div>', unsafe_allow_html=True)
-    h4.markdown('<div class="header-box">Dahil</div>', unsafe_allow_html=True)
-
-    updated_checks = []
-
-    for i, item in enumerate(st.session_state.checks, start=1):
-        c1, c2, c3, c4 = st.columns([0.7, 2.4, 1.7, 0.7], vertical_alignment="center")
-
-        c1.markdown(f'<div class="row-no-box">#{i}</div>', unsafe_allow_html=True)
-
-        amount_key = f"amount_{item['id']}"
-        due_key = f"due_{item['id']}"
-        active_key = f"active_{item['id']}"
-
-        # Session state içine mevcut değerleri yükle
-        if amount_key not in st.session_state:
-            st.session_state[amount_key] = item["amount_text"]
-
-        if due_key not in st.session_state:
-            st.session_state[due_key] = item["due_date"]
-
-        if active_key not in st.session_state:
-            st.session_state[active_key] = item["active"]
-
-        c2.text_input(
-            label="",
-            key=amount_key,
-            placeholder="Örn: 1.230.000",
-            on_change=normalize_amount_field,
-            args=(item["id"],),
-            label_visibility="collapsed"
-        )
-
-        c3.date_input(
-            label="",
-            key=due_key,
-            format="DD.MM.YYYY",
-            label_visibility="collapsed"
-        )
-
-        c4.checkbox(
-            label="",
-            key=active_key,
-            label_visibility="collapsed"
-        )
-
-        st.markdown('<div class="row-divider"></div>', unsafe_allow_html=True)
-
-        updated_checks.append(
-            {
-                "id": item["id"],
-                "active": st.session_state[active_key],
-                "amount_text": st.session_state[amount_key],
-                "due_date": st.session_state[due_key]
-            }
-        )
-
-    st.session_state.checks = updated_checks
-    st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('<div class="compact-space"></div>', unsafe_allow_html=True)
 
 # -------------------------------------------------
 # Hesaplama
@@ -302,12 +270,10 @@ for item in st.session_state.checks:
 
 if active_checks:
     total_amount = sum(x["amount"] for x in active_checks)
-
     weighted_days_sum = sum(
         x["amount"] * ((x["due_date"] - today).days)
         for x in active_checks
     )
-
     avg_days = round(weighted_days_sum / total_amount)
     avg_due_date = today + timedelta(days=avg_days)
     remaining_days = (avg_due_date - today).days
@@ -317,8 +283,74 @@ else:
     remaining_days = None
 
 # -------------------------------------------------
-# Sağ panel - Sonuçlar
+# Ana layout
+# Mobilde kolonlar zaten alt alta iner
 # -------------------------------------------------
+left_col, right_col = st.columns([1.9, 1], gap="large")
+
+with left_col:
+    st.markdown('<div class="main-card">', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">Çek Listesi</div>', unsafe_allow_html=True)
+
+    updated_checks = []
+
+    for i, item in enumerate(st.session_state.checks, start=1):
+        amount_key = f"amount_{item['id']}"
+        due_key = f"due_{item['id']}"
+        active_key = f"active_{item['id']}"
+
+        if amount_key not in st.session_state:
+            st.session_state[amount_key] = item["amount_text"]
+
+        if due_key not in st.session_state:
+            st.session_state[due_key] = item["due_date"]
+
+        if active_key not in st.session_state:
+            st.session_state[active_key] = item["active"]
+
+        st.markdown('<div class="item-card">', unsafe_allow_html=True)
+
+        top_left, top_right = st.columns([4, 1], vertical_alignment="center")
+        with top_left:
+            st.markdown(f'<div class="item-top">Kalem #{i}</div>', unsafe_allow_html=True)
+        with top_right:
+            st.checkbox(
+                "Dahil",
+                key=active_key
+            )
+
+        st.markdown('<div class="item-label">Tutar (TL)</div>', unsafe_allow_html=True)
+        st.text_input(
+            label="Tutar",
+            key=amount_key,
+            placeholder="Örn: 1.230.000",
+            on_change=normalize_amount_field,
+            args=(item["id"],),
+            label_visibility="collapsed"
+        )
+
+        st.markdown('<div class="item-label">Vade Tarihi</div>', unsafe_allow_html=True)
+        st.date_input(
+            label="Vade",
+            key=due_key,
+            format="DD.MM.YYYY",
+            label_visibility="collapsed"
+        )
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        updated_checks.append(
+            {
+                "id": item["id"],
+                "active": st.session_state[active_key],
+                "amount_text": st.session_state[amount_key],
+                "due_date": st.session_state[due_key]
+            }
+        )
+
+    st.session_state.checks = updated_checks
+    st.markdown('</div>', unsafe_allow_html=True)
+
 with right_col:
     st.markdown('<div class="side-card">', unsafe_allow_html=True)
     st.markdown('<div class="section-title">Hesap Özeti</div>', unsafe_allow_html=True)
@@ -333,11 +365,8 @@ with right_col:
         st.metric("Kalan Gün", "-")
 
     st.markdown("---")
-
     st.write(f"**Toplam Kalem:** {len(st.session_state.checks)}")
     st.write(f"**Hesaba Dahil Çek:** {len(active_checks)}")
-
     st.markdown("---")
-    st.markdown('<div class="compact-note">Ortalama vade, çek tutarları ağırlıklı kabul edilerek hesaplanır.</div>', unsafe_allow_html=True)
-
+    st.markdown('<div class="note-text">Ortalama vade, çek tutarları ağırlıklı hesaplanır.</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
