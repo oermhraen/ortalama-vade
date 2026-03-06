@@ -78,11 +78,6 @@ def draw_text_center(draw, box, text, font, fill):
 
 
 def generate_summary_png(total_count, total_amount, avg_due_date, active_rows):
-    """
-    Kompakt ve simetrik PNG özet:
-    Üst: 3 eşit kolon
-    Alt: 3 eşit kolon
-    """
     if not active_rows:
         active_rows = [{"index": "-", "amount": 0, "due_date": "-"}]
 
@@ -120,7 +115,6 @@ def generate_summary_png(total_count, total_amount, avg_due_date, active_rows):
     x2 = col_w * 2
     x3 = col_w * 3
 
-    # Üst başlık
     top_labels = [
         (x0, 0, x1, top_header_h, "Qty - Adet"),
         (x1, 0, x2, top_header_h, "Total Amount - Toplam Tutar"),
@@ -148,7 +142,6 @@ def generate_summary_png(total_count, total_amount, avg_due_date, active_rows):
             black
         )
 
-    # Alt tablo
     start_y = top_header_h + top_value_h + gap_h
 
     detail_labels = [
@@ -167,9 +160,9 @@ def generate_summary_png(total_count, total_amount, avg_due_date, active_rows):
         fill = fill_alt if i % 2 == 0 else fill_white
 
         row_values = [
-            (x0, y, x1, y + row_h, str(row["index"])),
-            (x1, y, x2, y + row_h, format_plain_amount(row["amount"])),
-            (x2, y, x3, y + row_h, row["due_date"] if isinstance(row["due_date"], str) else format_date_tr(row["due_date"])),
+            (x0, y, x1, y + 28, str(row["index"])),
+            (x1, y, x2, y + 28, format_plain_amount(row["amount"])),
+            (x2, y, x3, y + 28, row["due_date"] if isinstance(row["due_date"], str) else format_date_tr(row["due_date"])),
         ]
 
         for bx1, by1, bx2, by2, value in row_values:
@@ -182,7 +175,7 @@ def generate_summary_png(total_count, total_amount, avg_due_date, active_rows):
                 black
             )
 
-        y += row_h
+        y += 28
 
     output = BytesIO()
     img.save(output, format="PNG")
@@ -252,16 +245,16 @@ def normalize_amount_field(item_id):
 st.markdown("""
 <style>
 .block-container {
-    max-width: 1220px;
-    padding-top: 2rem;
+    max-width: 1180px;
+    padding-top: 3.2rem;
     padding-bottom: 0.8rem;
 }
 
 h1 {
     margin: 0 0 1rem 0 !important;
     padding: 0 !important;
-    line-height: 1.08 !important;
-    font-size: 3rem !important;
+    line-height: 1.05 !important;
+    font-size: 2.75rem !important;
 }
 
 .section-title {
@@ -280,7 +273,7 @@ h1 {
 }
 
 .row-no-box {
-    height: 32px;
+    height: 30px;
     display: flex;
     align-items: center;
     font-weight: 700;
@@ -308,9 +301,9 @@ div[data-testid="stCheckbox"] {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 32px;
+    height: 30px;
     margin-top: 0 !important;
-    padding-top: 3px;
+    padding-top: 2px;
 }
 
 div[data-testid="stCheckbox"] label {
@@ -319,12 +312,8 @@ div[data-testid="stCheckbox"] label {
 
 .stTextInput input,
 .stDateInput input {
-    height: 32px !important;
-    font-size: 13px !important;
-}
-
-.same-width-btn {
-    max-width: 360px;
+    height: 30px !important;
+    font-size: 12px !important;
 }
 
 .note-text {
@@ -334,16 +323,16 @@ div[data-testid="stCheckbox"] label {
 
 @media (max-width: 768px) {
     .block-container {
-        padding-top: 1rem;
-        padding-left: 0.55rem;
-        padding-right: 0.55rem;
+        padding-top: 1.6rem;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
         padding-bottom: 0.6rem;
     }
 
     h1 {
-        font-size: 2.1rem !important;
-        line-height: 1.05 !important;
-        margin-bottom: 0.9rem !important;
+        font-size: 1.95rem !important;
+        line-height: 1.02 !important;
+        margin-bottom: 0.8rem !important;
     }
 
     .section-title {
@@ -352,32 +341,30 @@ div[data-testid="stCheckbox"] label {
     }
 
     .header-box {
-        font-size: 11px;
-        height: 20px;
+        font-size: 10px;
+        height: 18px;
     }
 
     .row-no-box {
-        font-size: 13px;
-        height: 30px;
+        font-size: 12px;
+        height: 28px;
     }
 
     .stTextInput input,
     .stDateInput input {
-        height: 30px !important;
-        font-size: 12px !important;
+        height: 28px !important;
+        font-size: 11px !important;
+        padding-left: 8px !important;
+        padding-right: 8px !important;
     }
 
     div[data-testid="stMetric"] {
-        padding: 9px 10px;
+        padding: 8px 10px;
     }
 
     .stButton > button {
-        height: 38px;
-        font-size: 14px;
-    }
-
-    .same-width-btn {
-        max-width: 100%;
+        height: 36px;
+        font-size: 13px;
     }
 }
 </style>
@@ -388,8 +375,8 @@ st.title("Çek Ortalama Vade Hesaplayıcı")
 # -------------------------------------------------
 # Üst buton
 # -------------------------------------------------
-btn_col_left, btn_col_right = st.columns([1.2, 3], gap="small")
-with btn_col_left:
+btn_left, btn_right = st.columns([0.78, 1.6], gap="small")
+with btn_left:
     if st.button("🗑️ Temizle", use_container_width=True):
         clear_all()
         st.rerun()
@@ -397,7 +384,7 @@ with btn_col_left:
 # -------------------------------------------------
 # Ana layout
 # -------------------------------------------------
-left_col, right_col = st.columns([1.65, 0.7], gap="medium")
+left_col, right_col = st.columns([1.35, 0.62], gap="medium")
 
 # -------------------------------------------------
 # Sol panel
@@ -405,8 +392,8 @@ left_col, right_col = st.columns([1.65, 0.7], gap="medium")
 with left_col:
     st.markdown('<div class="section-title">Çek Listesi</div>', unsafe_allow_html=True)
 
-    # Maksimum kompakt oranlar
-    h1, h2, h3, h4 = st.columns([0.32, 1.0, 1.0, 0.22], vertical_alignment="center")
+    # Daha sert kompakt oranlar
+    h1, h2, h3, h4 = st.columns([0.18, 0.56, 0.56, 0.10], vertical_alignment="center")
     h1.markdown('<div class="header-box">Sıra</div>', unsafe_allow_html=True)
     h2.markdown('<div class="header-box">Tutar (TL)</div>', unsafe_allow_html=True)
     h3.markdown('<div class="header-box">Vade Tarihi</div>', unsafe_allow_html=True)
@@ -415,7 +402,7 @@ with left_col:
     updated_checks = []
 
     for i, item in enumerate(st.session_state.checks, start=1):
-        c1, c2, c3, c4 = st.columns([0.32, 1.0, 1.0, 0.22], vertical_alignment="center")
+        c1, c2, c3, c4 = st.columns([0.18, 0.56, 0.56, 0.10], vertical_alignment="center")
 
         amount_key = f"amount_{item['id']}"
         due_key = f"due_{item['id']}"
@@ -467,8 +454,8 @@ with left_col:
 
     st.session_state.checks = updated_checks
 
-    add_btn_left, add_btn_right = st.columns([1.2, 3], gap="small")
-    with add_btn_left:
+    add_left, add_right = st.columns([0.78, 1.6], gap="small")
+    with add_left:
         if st.button("➕ Yeni Çek Ekle", key="bottom_add_button", use_container_width=True):
             add_check()
             st.rerun()
