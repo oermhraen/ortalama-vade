@@ -7,9 +7,9 @@ st.set_page_config(
     layout="wide"
 )
 
-# ----------------------------
+# --------------------------------------------------
 # SESSION STATE
-# ----------------------------
+# --------------------------------------------------
 def default_row():
     return {
         "amount": 0.0,
@@ -24,9 +24,9 @@ if "checks" not in st.session_state:
         default_row()
     ]
 
-# ----------------------------
+# --------------------------------------------------
 # HELPERS
-# ----------------------------
+# --------------------------------------------------
 def format_tl(value: float) -> str:
     try:
         return f"{value:,.0f}".replace(",", ".") + " TL"
@@ -35,6 +35,39 @@ def format_tl(value: float) -> str:
 
 def format_date_tr(d: date) -> str:
     return d.strftime("%d.%m.%Y")
+
+def parse_amount(value: str) -> float:
+    """
+    Kullanıcı girişini sayıya çevirir.
+    Örnek destekler:
+    - 1000000
+    - 1.000.000
+    - 1,000,000
+    - 1 000 000
+    """
+    if value is None:
+        return 0.0
+
+    cleaned = str(value).strip()
+    if not cleaned:
+        return 0.0
+
+    cleaned = cleaned.replace("TL", "").replace("tl", "")
+    cleaned = cleaned.replace(" ", "")
+    cleaned = cleaned.replace(".", "")
+    cleaned = cleaned.replace(",", "")
+
+    digits_only = "".join(ch for ch in cleaned if ch.isdigit())
+
+    if not digits_only:
+        return 0.0
+
+    return float(digits_only)
+
+def amount_input_display(value: float) -> str:
+    if not value:
+        return "0"
+    return f"{int(value):,}".replace(",", ".")
 
 def calculate_weighted_average_maturity(checks):
     valid_checks = [
@@ -62,18 +95,18 @@ def calculate_weighted_average_maturity(checks):
 
     return avg_date, total_amount, avg_days
 
-# ----------------------------
+# --------------------------------------------------
 # ACTIONS
-# ----------------------------
+# --------------------------------------------------
 def clear_all():
     st.session_state.checks = [default_row()]
 
 def add_new_row():
     st.session_state.checks.append(default_row())
 
-# ----------------------------
+# --------------------------------------------------
 # STYLE
-# ----------------------------
+# --------------------------------------------------
 st.markdown("""
 <style>
     .stApp {
@@ -84,26 +117,19 @@ st.markdown("""
         font-size: 42px;
         font-weight: 800;
         color: #232733;
-        margin-bottom: 20px;
+        margin-bottom: 18px;
         letter-spacing: -0.5px;
     }
 
     .section-title {
         font-size: 28px;
-        font-weight: 700;
+        font-weight: 800;
         color: #232733;
-        margin-top: 10px;
-        margin-bottom: 8px;
+        margin-top: 8px;
+        margin-bottom: 10px;
     }
 
     .table-header {
-        font-size: 17px;
-        font-weight: 700;
-        color: #232733;
-        margin-bottom: 8px;
-    }
-
-    .summary-title {
         font-size: 17px;
         font-weight: 700;
         color: #232733;
@@ -142,36 +168,17 @@ st.markdown("""
         margin-bottom: 14px;
     }
 
-    div[data-testid="stButton"] > button {
-        border-radius: 12px !important;
-        border: 1px solid #ddd9de !important;
-        background: #f3f2f4 !important;
-        color: #7a4ce0 !important;
-        font-size: 28px !important;
-        font-weight: 700 !important;
-        height: 46px !important;
-        width: 46px !important;
-        padding: 0 !important;
-        min-height: 46px !important;
-        line-height: 1 !important;
-        box-shadow: none !important;
-    }
-
-    div[data-testid="stButton"] > button:hover {
-        border-color: #cfc8d7 !important;
-        background: #ece9ef !important;
-    }
-
-    .trash-btn div[data-testid="stButton"] > button {
-        color: #9b8ca7 !important;
-        font-size: 20px !important;
-    }
-
     .serial-box {
         font-size: 22px;
         font-weight: 700;
         color: #232733;
-        padding-top: 7px;
+        padding-top: 8px;
+    }
+
+    .block-container {
+        padding-top: 24px;
+        padding-bottom: 24px;
+        max-width: 1200px;
     }
 
     div[data-baseweb="input"] input {
@@ -181,6 +188,7 @@ st.markdown("""
         color: #232733 !important;
         font-size: 16px !important;
         font-weight: 600 !important;
+        height: 50px !important;
     }
 
     div[data-baseweb="input"] input:focus {
@@ -188,14 +196,11 @@ st.markdown("""
         box-shadow: none !important;
     }
 
-    div[data-baseweb="input"] {
-        border-radius: 10px !important;
-    }
-
     .stDateInput > div > div {
         background: #ecebed !important;
         border-radius: 10px !important;
         border: 1px solid #ecebed !important;
+        height: 50px !important;
     }
 
     .stDateInput input {
@@ -204,42 +209,57 @@ st.markdown("""
         color: #232733 !important;
     }
 
-    .block-container {
-        padding-top: 24px;
-        padding-bottom: 24px;
-        max-width: 1200px;
+    div[data-testid="stButton"] > button {
+        border-radius: 12px !important;
+        border: 1px solid #d6d2d8 !important;
+        background: #f3f2f4 !important;
+        color: #232733 !important;
+        font-size: 16px !important;
+        font-weight: 700 !important;
+        height: 48px !important;
+        padding: 0 18px !important;
+        box-shadow: none !important;
+        width: 100% !important;
+        white-space: nowrap !important;
     }
 
-    .checkbox-wrap {
-        padding-top: 6px;
+    div[data-testid="stButton"] > button:hover {
+        border-color: #c9c3cc !important;
+        background: #ece9ef !important;
+    }
+
+    .top-action-wrap {
+        max-width: 220px;
+        margin-bottom: 28px;
+    }
+
+    .bottom-action-wrap {
+        max-width: 220px;
+        margin-top: 8px;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# ----------------------------
+# --------------------------------------------------
 # HEADER
-# ----------------------------
+# --------------------------------------------------
 st.markdown('<div class="main-title">Ortalama Vade Hesaplayıcı</div>', unsafe_allow_html=True)
 
-top_left, top_right = st.columns([1, 20], gap="small")
-with top_left:
-    st.markdown('<div class="trash-btn">', unsafe_allow_html=True)
-    if st.button("🗑", key="clear_btn", help="Listeyi temizle"):
-        clear_all()
-        st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('<div class="top-action-wrap">', unsafe_allow_html=True)
+if st.button("🗑 Listeyi Temizle", key="clear_btn"):
+    clear_all()
+    st.rerun()
+st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("")
-
-# ----------------------------
+# --------------------------------------------------
 # MAIN LAYOUT
-# ----------------------------
-left_col, right_col = st.columns([1.3, 1], gap="large")
+# --------------------------------------------------
+left_col, right_col = st.columns([1.35, 1], gap="large")
 
 with left_col:
     st.markdown('<div class="section-title">Çek Listesi</div>', unsafe_allow_html=True)
 
-    header_cols = st.columns([0.8, 1.7, 1.8, 0.8], gap="medium")
+    header_cols = st.columns([0.8, 1.8, 1.8, 0.8], gap="medium")
     with header_cols[0]:
         st.markdown('<div class="table-header">Sıra</div>', unsafe_allow_html=True)
     with header_cols[1]:
@@ -252,21 +272,20 @@ with left_col:
     updated_checks = []
 
     for i, row in enumerate(st.session_state.checks):
-        cols = st.columns([0.8, 1.7, 1.8, 0.8], gap="medium")
+        cols = st.columns([0.8, 1.8, 1.8, 0.8], gap="medium")
 
         with cols[0]:
             st.markdown(f'<div class="serial-box">#{i+1}</div>', unsafe_allow_html=True)
 
         with cols[1]:
-            amount = st.number_input(
+            amount_text = st.text_input(
                 label=f"Tutar {i+1}",
-                min_value=0.0,
-                value=float(row["amount"]),
-                step=1000.0,
-                format="%.0f",
+                value=amount_input_display(row["amount"]),
                 label_visibility="collapsed",
-                key=f"amount_{i}"
+                key=f"amount_{i}",
+                placeholder="Örn: 1.250.000"
             )
+            amount = parse_amount(amount_text)
 
         with cols[2]:
             due_date = st.date_input(
@@ -295,11 +314,11 @@ with left_col:
 
     st.session_state.checks = updated_checks
 
-    add_col, _ = st.columns([1, 20])
-    with add_col:
-        if st.button("+", key="add_btn", help="Yeni çek ekle"):
-            add_new_row()
-            st.rerun()
+    st.markdown('<div class="bottom-action-wrap">', unsafe_allow_html=True)
+    if st.button("＋ Yeni Çek Ekle", key="add_btn"):
+        add_new_row()
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
 with right_col:
     st.markdown('<div class="section-title">Hesap Özeti</div>', unsafe_allow_html=True)
