@@ -79,53 +79,52 @@ def draw_text_center(draw, box, text, font, fill):
 
 def generate_summary_png(total_count, total_amount, avg_due_date, active_rows):
     """
-    Daha kompakt, daha dengeli PNG özet çıktısı üretir.
-    İngilizce başlıklar kullanılır.
+    Kompakt ve simetrik PNG özet:
+    Üst: 3 eşit kolon
+    Alt: 3 eşit kolon
     """
     if not active_rows:
         active_rows = [{"index": "-", "amount": 0, "due_date": "-"}]
 
     row_count = len(active_rows)
 
-    # Kompakt ölçüler
-    width = 760
-    top_header_h = 32
-    top_value_h = 34
-    gap_h = 8
-    table_header_h = 32
-    row_h = 30
+    width = 540
+    col_w = width // 3
+    width = col_w * 3
+
+    top_header_h = 28
+    top_value_h = 30
+    gap_h = 6
+    table_header_h = 28
+    row_h = 28
     height = top_header_h + top_value_h + gap_h + table_header_h + (row_count * row_h)
 
-    navy = (25, 77, 122)
+    navy = (24, 78, 121)
     white = (255, 255, 255)
     black = (18, 18, 18)
-    fill_alt = (242, 242, 242)
+    fill_alt = (243, 243, 243)
     fill_white = (255, 255, 255)
     border = (0, 0, 0)
 
-    font_header = get_font(16, bold=True)
-    font_value = get_font(17, bold=False)
-    font_value_bold = get_font(17, bold=True)
-    font_cell = get_font(16, bold=False)
-    font_cell_bold = get_font(16, bold=True)
+    font_header = get_font(12, bold=True)
+    font_value = get_font(13, bold=False)
+    font_value_bold = get_font(13, bold=True)
+    font_cell = get_font(13, bold=False)
+    font_cell_bold = get_font(13, bold=True)
 
     img = Image.new("RGB", (width, height), white)
     draw = ImageDraw.Draw(img)
 
-    # Üst özet kolonları
-    c1 = 120
-    c2 = 280
-    c3 = width - c1 - c2
-
     x0 = 0
-    x1 = c1
-    x2 = c1 + c2
-    x3 = width
+    x1 = col_w
+    x2 = col_w * 2
+    x3 = col_w * 3
 
+    # Üst başlık
     top_labels = [
-        (x0, 0, x1, top_header_h, "Qty"),
-        (x1, 0, x2, top_header_h, "Total Amount"),
-        (x2, 0, x3, top_header_h, "Avg. Due Date"),
+        (x0, 0, x1, top_header_h, "Qty - Adet"),
+        (x1, 0, x2, top_header_h, "Total Amount - Toplam Tutar"),
+        (x2, 0, x3, top_header_h, "Avg. Due Date - Ortalama Vade"),
     ]
 
     for bx1, by1, bx2, by2, label in top_labels:
@@ -152,19 +151,10 @@ def generate_summary_png(total_count, total_amount, avg_due_date, active_rows):
     # Alt tablo
     start_y = top_header_h + top_value_h + gap_h
 
-    d1 = 90
-    d2 = 340
-    d3 = width - d1 - d2
-
-    dx0 = 0
-    dx1 = d1
-    dx2 = d1 + d2
-    dx3 = width
-
     detail_labels = [
-        (dx0, start_y, dx1, start_y + table_header_h, "No"),
-        (dx1, start_y, dx2, start_y + table_header_h, "Check Amount"),
-        (dx2, start_y, dx3, start_y + table_header_h, "Due Date"),
+        (x0, start_y, x1, start_y + table_header_h, "No - Sira"),
+        (x1, start_y, x2, start_y + table_header_h, "Check Amount - Cek Tutari"),
+        (x2, start_y, x3, start_y + table_header_h, "Due Date - Vade"),
     ]
 
     for bx1, by1, bx2, by2, label in detail_labels:
@@ -177,9 +167,9 @@ def generate_summary_png(total_count, total_amount, avg_due_date, active_rows):
         fill = fill_alt if i % 2 == 0 else fill_white
 
         row_values = [
-            (dx0, y, dx1, y + row_h, str(row["index"])),
-            (dx1, y, dx2, y + row_h, format_plain_amount(row["amount"])),
-            (dx2, y, dx3, y + row_h, row["due_date"] if isinstance(row["due_date"], str) else format_date_tr(row["due_date"])),
+            (x0, y, x1, y + row_h, str(row["index"])),
+            (x1, y, x2, y + row_h, format_plain_amount(row["amount"])),
+            (x2, y, x3, y + row_h, row["due_date"] if isinstance(row["due_date"], str) else format_date_tr(row["due_date"])),
         ]
 
         for bx1, by1, bx2, by2, value in row_values:
@@ -188,9 +178,10 @@ def generate_summary_png(total_count, total_amount, avg_due_date, active_rows):
                 draw,
                 (bx1, by1, bx2, by2),
                 value,
-                font_cell_bold if bx1 == dx1 else font_cell,
+                font_cell_bold if bx1 == x1 else font_cell,
                 black
             )
+
         y += row_h
 
     output = BytesIO()
@@ -261,26 +252,35 @@ def normalize_amount_field(item_id):
 st.markdown("""
 <style>
 .block-container {
-    max-width: 1360px;
-    padding-top: 2.2rem;
-    padding-bottom: 1rem;
+    max-width: 1220px;
+    padding-top: 2rem;
+    padding-bottom: 0.8rem;
 }
 
 h1 {
-    margin: 0 0 1.2rem 0 !important;
+    margin: 0 0 1rem 0 !important;
     padding: 0 !important;
     line-height: 1.08 !important;
-    font-size: 3.2rem !important;
+    font-size: 3rem !important;
 }
 
 .section-title {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .header-box {
-    height: 24px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+    color: #1f2937;
+    font-size: 13px;
+}
+
+.row-no-box {
+    height: 32px;
     display: flex;
     align-items: center;
     font-weight: 700;
@@ -288,24 +288,15 @@ h1 {
     font-size: 14px;
 }
 
-.row-no-box {
-    height: 34px;
-    display: flex;
-    align-items: center;
-    font-weight: 700;
-    color: #1f2937;
-    font-size: 15px;
-}
-
 .row-divider {
     border-bottom: 1px solid #e5e7eb;
-    margin: 6px 0 8px 0;
+    margin: 5px 0 7px 0;
 }
 
 div[data-testid="stMetric"] {
     border: 1px solid #d1d5db;
     border-radius: 12px;
-    padding: 12px 14px;
+    padding: 10px 12px;
 }
 
 div[data-testid="stTextInput"] > div,
@@ -317,9 +308,9 @@ div[data-testid="stCheckbox"] {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 34px;
+    height: 32px;
     margin-top: 0 !important;
-    padding-top: 4px;
+    padding-top: 3px;
 }
 
 div[data-testid="stCheckbox"] label {
@@ -328,65 +319,64 @@ div[data-testid="stCheckbox"] label {
 
 .stTextInput input,
 .stDateInput input {
-    height: 34px !important;
-    font-size: 14px !important;
+    height: 32px !important;
+    font-size: 13px !important;
 }
 
-.top-action-wrap {
-    max-width: 420px;
-    margin-bottom: 1.2rem;
+.same-width-btn {
+    max-width: 360px;
 }
 
 .note-text {
-    font-size: 13px;
+    font-size: 12px;
     color: #6b7280;
 }
 
 @media (max-width: 768px) {
     .block-container {
-        padding-top: 1.2rem;
-        padding-left: 0.7rem;
-        padding-right: 0.7rem;
-        padding-bottom: 0.8rem;
+        padding-top: 1rem;
+        padding-left: 0.55rem;
+        padding-right: 0.55rem;
+        padding-bottom: 0.6rem;
     }
 
     h1 {
-        font-size: 2.25rem !important;
-        line-height: 1.06 !important;
-        margin-bottom: 1rem !important;
+        font-size: 2.1rem !important;
+        line-height: 1.05 !important;
+        margin-bottom: 0.9rem !important;
     }
 
     .section-title {
-        font-size: 18px;
-        margin-bottom: 8px;
+        font-size: 16px;
+        margin-bottom: 6px;
     }
 
     .header-box {
-        font-size: 12px;
-        height: 22px;
+        font-size: 11px;
+        height: 20px;
     }
 
     .row-no-box {
-        font-size: 14px;
-        height: 32px;
+        font-size: 13px;
+        height: 30px;
     }
 
     .stTextInput input,
     .stDateInput input {
-        height: 32px !important;
-        font-size: 13px !important;
+        height: 30px !important;
+        font-size: 12px !important;
     }
 
     div[data-testid="stMetric"] {
-        padding: 10px 12px;
+        padding: 9px 10px;
     }
 
     .stButton > button {
-        height: 40px;
-        font-size: 15px;
+        height: 38px;
+        font-size: 14px;
     }
 
-    .top-action-wrap {
+    .same-width-btn {
         max-width: 100%;
     }
 }
@@ -398,16 +388,16 @@ st.title("Çek Ortalama Vade Hesaplayıcı")
 # -------------------------------------------------
 # Üst buton
 # -------------------------------------------------
-st.markdown('<div class="top-action-wrap">', unsafe_allow_html=True)
-if st.button("🗑️ Temizle", use_container_width=True):
-    clear_all()
-    st.rerun()
-st.markdown('</div>', unsafe_allow_html=True)
+btn_col_left, btn_col_right = st.columns([1.2, 3], gap="small")
+with btn_col_left:
+    if st.button("🗑️ Temizle", use_container_width=True):
+        clear_all()
+        st.rerun()
 
 # -------------------------------------------------
 # Ana layout
 # -------------------------------------------------
-left_col, right_col = st.columns([2.2, 1], gap="large")
+left_col, right_col = st.columns([1.65, 0.7], gap="medium")
 
 # -------------------------------------------------
 # Sol panel
@@ -415,8 +405,8 @@ left_col, right_col = st.columns([2.2, 1], gap="large")
 with left_col:
     st.markdown('<div class="section-title">Çek Listesi</div>', unsafe_allow_html=True)
 
-    # Eşit ve daha kompakt giriş alanları
-    h1, h2, h3, h4 = st.columns([0.55, 1.45, 1.45, 0.45], vertical_alignment="center")
+    # Maksimum kompakt oranlar
+    h1, h2, h3, h4 = st.columns([0.32, 1.0, 1.0, 0.22], vertical_alignment="center")
     h1.markdown('<div class="header-box">Sıra</div>', unsafe_allow_html=True)
     h2.markdown('<div class="header-box">Tutar (TL)</div>', unsafe_allow_html=True)
     h3.markdown('<div class="header-box">Vade Tarihi</div>', unsafe_allow_html=True)
@@ -425,7 +415,7 @@ with left_col:
     updated_checks = []
 
     for i, item in enumerate(st.session_state.checks, start=1):
-        c1, c2, c3, c4 = st.columns([0.55, 1.45, 1.45, 0.45], vertical_alignment="center")
+        c1, c2, c3, c4 = st.columns([0.32, 1.0, 1.0, 0.22], vertical_alignment="center")
 
         amount_key = f"amount_{item['id']}"
         due_key = f"due_{item['id']}"
@@ -445,7 +435,7 @@ with left_col:
         c2.text_input(
             label="",
             key=amount_key,
-            placeholder="Örn: 1.230.000",
+            placeholder="1.230.000",
             on_change=normalize_amount_field,
             args=(item["id"],),
             label_visibility="collapsed"
@@ -477,9 +467,11 @@ with left_col:
 
     st.session_state.checks = updated_checks
 
-    if st.button("➕ Yeni Çek Ekle", key="bottom_add_button", use_container_width=True):
-        add_check()
-        st.rerun()
+    add_btn_left, add_btn_right = st.columns([1.2, 3], gap="small")
+    with add_btn_left:
+        if st.button("➕ Yeni Çek Ekle", key="bottom_add_button", use_container_width=True):
+            add_check()
+            st.rerun()
 
 # -------------------------------------------------
 # Hesaplama
@@ -547,7 +539,7 @@ with right_col:
 
     st.markdown("---")
     st.markdown("**PNG Özet Çıktı**")
-    st.image(png_bytes, use_container_width=True)
+    st.image(png_bytes, use_container_width=False)
 
     file_name = f"cek_ozet_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
     st.download_button(
