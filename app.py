@@ -85,7 +85,6 @@ def clear_all():
     ]
     st.session_state.counter = 2
 
-    # widget state temizliği
     for key in list(st.session_state.keys()):
         if key.startswith("amount_") or key.startswith("due_") or key.startswith("active_"):
             del st.session_state[key]
@@ -113,7 +112,6 @@ st.markdown("""
     padding-bottom: 1rem;
 }
 
-/* Kartlar */
 .list-card, .side-card {
     background: #ffffff;
     border: 1px solid #e5e7eb;
@@ -157,7 +155,6 @@ div[data-testid="stMetric"] {
     border-radius: 12px;
 }
 
-/* Input hizalama */
 div[data-testid="stTextInput"] > div,
 div[data-testid="stDateInput"] > div {
     margin-top: 0 !important;
@@ -180,7 +177,6 @@ div[data-testid="stCheckbox"] label {
     height: 38px !important;
 }
 
-/* Başlık alanı */
 .main-title {
     font-size: 44px;
     font-weight: 800;
@@ -194,7 +190,10 @@ div[data-testid="stCheckbox"] label {
     color: #6b7280;
 }
 
-/* Mobil iyileştirme: layout'u bozmadan sıkıştır */
+.bottom-add-wrap {
+    margin-top: 10px;
+}
+
 @media (max-width: 768px) {
     .block-container {
         padding-top: 0.45rem;
@@ -277,7 +276,6 @@ with left_col:
     st.markdown('<div class="list-card">', unsafe_allow_html=True)
     st.markdown('<div class="section-title">Çek Listesi</div>', unsafe_allow_html=True)
 
-    # Sıra - Tutar - Vade - Dahil
     h1, h2, h3, h4 = st.columns([0.7, 2.4, 1.7, 0.6], vertical_alignment="center")
     h1.markdown('<div class="header-box">Sıra</div>', unsafe_allow_html=True)
     h2.markdown('<div class="header-box">Tutar (TL)</div>', unsafe_allow_html=True)
@@ -338,6 +336,13 @@ with left_col:
         )
 
     st.session_state.checks = updated_checks
+
+    st.markdown('<div class="bottom-add-wrap"></div>', unsafe_allow_html=True)
+
+    if st.button("➕ Yeni Çek Ekle", key="bottom_add_button", use_container_width=True):
+        add_check()
+        st.rerun()
+
     st.markdown('</div>', unsafe_allow_html=True)
 
 # -------------------------------------------------
