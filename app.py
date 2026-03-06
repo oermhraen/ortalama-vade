@@ -6,38 +6,45 @@ st.set_page_config(
     layout="wide"
 )
 
-# ---------------------------
+# -------------------------------------------------
 # Yardımcı fonksiyonlar
-# ---------------------------
+# -------------------------------------------------
 def parse_amount(text):
     """
-    Kullanıcının girdiği tutarı sayıya çevirir.
-    Kabul edilen örnekler:
-    1000000
-    1.000.000
-    1,000,000
-    1.000.000 TL
+    Kullanıcının girdiği değeri tam sayıya çevirir.
+    Örnek kabul:
+    1230000
+    1.230.000
+    1,230,000
+    1.230.000 TL
     """
     if text is None:
         return 0
 
-    text = str(text).strip().upper().replace("TL", "").replace(" ", "")
+    text = str(text).strip().upper()
+    text = text.replace("TL", "").replace(" ", "")
 
-    if not text:
+    if text == "":
         return 0
 
-    # Ondalık istemiyoruz, tüm virgül/nokta ayraçlarını kaldırıyoruz
     cleaned = text.replace(".", "").replace(",", "")
 
     try:
-        value = int(cleaned)
-        return max(value, 0)
+        return max(int(cleaned), 0)
     except:
         return 0
 
 
+def format_amount_input(value):
+    """Input kutusunda gösterilecek biçim: 1.230.000"""
+    try:
+        return f"{int(value):,}".replace(",", ".")
+    except:
+        return ""
+
+
 def format_tl(value):
-    """1.000.000 TL formatı"""
+    """Sonuç alanında gösterilecek biçim: 1.230.000 TL"""
     try:
         return f"{int(round(value)):,}".replace(",", ".") + " TL"
     except:
@@ -48,9 +55,9 @@ def format_date_tr(d):
     return d.strftime("%d.%m.%Y")
 
 
-# ---------------------------
+# -------------------------------------------------
 # Session state
-# ---------------------------
+# -------------------------------------------------
 if "checks" not in st.session_state:
     st.session_state.checks = [
         {
@@ -77,57 +84,117 @@ def add_check():
     st.session_state.counter += 1
 
 
-# ---------------------------
+def clear_all():
+    st.session_state.checks = [
+        {
+            "id": 1,
+            "active": True,
+            "amount_text": "",
+            "due_date": date.today()
+        }
+    ]
+    st.session_state.counter = 2
+
+
+def normalize_amount_field(item_id):
+    """
+    Kullanıcı inputtan çıkınca değeri noktalı biçime çevirir.
+    """
+    key = f"amount_{item_id}"
+    raw_value = st.session_state.get(key, "")
+    parsed = parse_amount(raw_value)
+
+    if parsed > 0:
+        st.session_state[key] = format_amount_input(parsed)
+    else:
+        st.session_state[key] = ""
+
+
+# -------------------------------------------------
 # Stil
-# ---------------------------
+# -------------------------------------------------
 st.markdown("""
 <style>
 .block-container {
-    padding-top: 1rem;
-    padding-bottom: 1rem;
-    max-width: 1400px;
+    padding-top: 0.8rem;
+    padding-bottom: 0.8rem;
+    max-width: 1450px;
 }
+
 div[data-testid="stMetric"] {
     background: #f7f7f9;
     border: 1px solid #e5e7eb;
     padding: 14px 16px;
     border-radius: 12px;
 }
-.small-label {
-    font-size: 13px;
-    font-weight: 600;
-    color: #374151;
-    margin-bottom: 4px;
-}
-.list-card {
+
+.list-card, .side-card {
     background: #ffffff;
     border: 1px solid #e5e7eb;
     border-radius: 14px;
-    padding: 14px;
+    padding: 14px 16px;
 }
-.side-card {
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 14px;
-    padding: 14px;
-}
+
 .section-title {
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 700;
-    margin-bottom: 10px;
+    margin-bottom: 14px;
 }
-.row-sep {
-    border-bottom: 1px solid #f0f0f0;
-    margin: 8px 0 12px 0;
+
+.row-divider {
+    border-bottom: 1px solid #f1f1f1;
+    margin: 8px 0 10px 0;
+}
+
+.row-no-box {
+    height: 38px;
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.header-box {
+    height: 28px;
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+div[data-testid="stTextInput"] > div,
+div[data-testid="stDateInput"] > div {
+    margin-top: 0 !important;
+}
+
+div[data-testid="stCheckbox"] {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 38px;
+    margin-top: 0 !important;
+}
+
+div[data-testid="stCheckbox"] label {
+    margin-bottom: 0 !important;
+}
+
+.stTextInput input, .stDateInput input {
+    height: 38px !important;
+}
+
+.compact-note {
+    font-size: 13px;
+    color: #6b7280;
 }
 </style>
 """, unsafe_allow_html=True)
 
+# -------------------------------------------------
+# Başlık ve butonlar
+# -------------------------------------------------
 st.title("Çek Ortalama Vade Hesaplayıcı")
 
-# ---------------------------
-# Üst butonlar
-# ---------------------------
 top1, top2, top3 = st.columns([1, 1, 5])
 
 with top1:
@@ -137,83 +204,91 @@ with top1:
 
 with top2:
     if st.button("🗑️ Temizle", use_container_width=True):
-        st.session_state.checks = [
-            {
-                "id": 1,
-                "active": True,
-                "amount_text": "",
-                "due_date": date.today()
-            }
-        ]
-        st.session_state.counter = 2
+        clear_all()
         st.rerun()
 
 st.markdown("")
 
-# ---------------------------
-# Ana yerleşim
-# ---------------------------
-left_col, right_col = st.columns([2.2, 1], gap="large")
+# -------------------------------------------------
+# Ana layout
+# -------------------------------------------------
+left_col, right_col = st.columns([2.4, 1], gap="large")
 
-# ---------------------------
-# Sol: Çek listesi
-# ---------------------------
+# -------------------------------------------------
+# Sol panel - Çek listesi
+# -------------------------------------------------
 with left_col:
     st.markdown('<div class="list-card">', unsafe_allow_html=True)
     st.markdown('<div class="section-title">Çek Listesi</div>', unsafe_allow_html=True)
 
-    h1, h2, h3, h4 = st.columns([0.6, 2.2, 1.5, 0.7])
-    h1.markdown("**Dahil**")
-    h2.markdown("**Tutar (TL)**")
-    h3.markdown("**Vade Tarihi**")
-    h4.markdown("**Kalem**")
+    h1, h2, h3, h4 = st.columns([0.7, 2.4, 1.7, 0.7], vertical_alignment="center")
+    h1.markdown('<div class="header-box">Sıra</div>', unsafe_allow_html=True)
+    h2.markdown('<div class="header-box">Tutar (TL)</div>', unsafe_allow_html=True)
+    h3.markdown('<div class="header-box">Vade Tarihi</div>', unsafe_allow_html=True)
+    h4.markdown('<div class="header-box">Dahil</div>', unsafe_allow_html=True)
 
     updated_checks = []
 
     for i, item in enumerate(st.session_state.checks, start=1):
-        c1, c2, c3, c4 = st.columns([0.6, 2.2, 1.5, 0.7])
+        c1, c2, c3, c4 = st.columns([0.7, 2.4, 1.7, 0.7], vertical_alignment="center")
 
-        active = c1.checkbox(
+        c1.markdown(f'<div class="row-no-box">#{i}</div>', unsafe_allow_html=True)
+
+        amount_key = f"amount_{item['id']}"
+        due_key = f"due_{item['id']}"
+        active_key = f"active_{item['id']}"
+
+        # Session state içine mevcut değerleri yükle
+        if amount_key not in st.session_state:
+            st.session_state[amount_key] = item["amount_text"]
+
+        if due_key not in st.session_state:
+            st.session_state[due_key] = item["due_date"]
+
+        if active_key not in st.session_state:
+            st.session_state[active_key] = item["active"]
+
+        c2.text_input(
             label="",
-            value=item["active"],
-            key=f"active_{item['id']}"
+            key=amount_key,
+            placeholder="Örn: 1.230.000",
+            on_change=normalize_amount_field,
+            args=(item["id"],),
+            label_visibility="collapsed"
         )
 
-        amount_text = c2.text_input(
+        c3.date_input(
             label="",
-            value=item["amount_text"],
-            placeholder="Örn: 1.000.000",
-            key=f"amount_{item['id']}"
-        )
-
-        due_date = c3.date_input(
-            label="",
-            value=item["due_date"],
+            key=due_key,
             format="DD.MM.YYYY",
-            key=f"due_{item['id']}"
+            label_visibility="collapsed"
         )
 
-        c4.markdown(f"**#{i}**")
+        c4.checkbox(
+            label="",
+            key=active_key,
+            label_visibility="collapsed"
+        )
 
-        st.markdown('<div class="row-sep"></div>', unsafe_allow_html=True)
+        st.markdown('<div class="row-divider"></div>', unsafe_allow_html=True)
 
         updated_checks.append(
             {
                 "id": item["id"],
-                "active": active,
-                "amount_text": amount_text,
-                "due_date": due_date
+                "active": st.session_state[active_key],
+                "amount_text": st.session_state[amount_key],
+                "due_date": st.session_state[due_key]
             }
         )
 
     st.session_state.checks = updated_checks
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------------------------
+# -------------------------------------------------
 # Hesaplama
-# ---------------------------
-active_checks = []
+# -------------------------------------------------
 today = date.today()
+active_checks = []
 
 for item in st.session_state.checks:
     amount = parse_amount(item["amount_text"])
@@ -228,10 +303,10 @@ for item in st.session_state.checks:
 if active_checks:
     total_amount = sum(x["amount"] for x in active_checks)
 
-    weighted_days_sum = 0
-    for x in active_checks:
-        day_diff = (x["due_date"] - today).days
-        weighted_days_sum += x["amount"] * day_diff
+    weighted_days_sum = sum(
+        x["amount"] * ((x["due_date"] - today).days)
+        for x in active_checks
+    )
 
     avg_days = round(weighted_days_sum / total_amount)
     avg_due_date = today + timedelta(days=avg_days)
@@ -239,11 +314,11 @@ if active_checks:
 else:
     total_amount = 0
     avg_due_date = None
-    remaining_days = 0
+    remaining_days = None
 
-# ---------------------------
-# Sağ: Özet bilgiler
-# ---------------------------
+# -------------------------------------------------
+# Sağ panel - Sonuçlar
+# -------------------------------------------------
 with right_col:
     st.markdown('<div class="side-card">', unsafe_allow_html=True)
     st.markdown('<div class="section-title">Hesap Özeti</div>', unsafe_allow_html=True)
@@ -259,13 +334,10 @@ with right_col:
 
     st.markdown("---")
 
-    aktif_adet = len(active_checks)
-    toplam_adet = len(st.session_state.checks)
-
-    st.write(f"**Toplam Kalem:** {toplam_adet}")
-    st.write(f"**Hesaba Dahil Çek:** {aktif_adet}")
+    st.write(f"**Toplam Kalem:** {len(st.session_state.checks)}")
+    st.write(f"**Hesaba Dahil Çek:** {len(active_checks)}")
 
     st.markdown("---")
+    st.markdown('<div class="compact-note">Ortalama vade, çek tutarları ağırlıklı kabul edilerek hesaplanır.</div>', unsafe_allow_html=True)
 
-    st.caption("Not: Ortalama vade, çek tutarları ağırlık kabul edilerek hesaplanır.")
     st.markdown('</div>', unsafe_allow_html=True)
