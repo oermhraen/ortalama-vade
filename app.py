@@ -1,5 +1,9 @@
-import streamlit as st
+import io
+import os
 from datetime import date, timedelta
+
+import streamlit as st
+from PIL import Image, ImageDraw, ImageFont
 
 st.set_page_config(
     page_title="Ortalama Vade Hesaplayıcı",
@@ -35,18 +39,18 @@ def format_tl(value: float) -> str:
         return "0 TL"
 
 
+def format_amount_plain(value: float) -> str:
+    try:
+        return f"{value:,.0f}".replace(",", ".")
+    except Exception:
+        return "0"
+
+
 def format_date_tr(d: date) -> str:
     return d.strftime("%d.%m.%Y")
 
 
 def parse_amount(value: str) -> float:
-    """
-    Desteklenen örnek girişler:
-    1000000
-    1.000.000
-    1,000,000
-    1 000 000
-    """
     if value is None:
         return 0.0
 
@@ -98,6 +102,159 @@ def calculate_weighted_average_maturity(checks):
     avg_date = base_date + timedelta(days=avg_days)
 
     return avg_date, total_amount, avg_days
+
+
+def get_included_checks(checks):
+    return [
+        row for row in checks
+        if row["included"] and row["amount"] > 0 and row["due_date"] is not None
+    ]
+
+
+# --------------------------------------------------
+# PNG GENERATION
+# --------------------------------------------------
+def get_font_paths():
+    return [
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+        "C:/Windows/Fonts/arial.ttf",
+    ]
+
+
+def load_font(size=18, bold=False):
+    bold_candidates = [
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        "C:/Windows/Fonts/arialbd.ttf",
+    ]
+    regular_candidates = [
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+        "C:/Windows/Fonts/arial.ttf",
+    ]
+
+    candidates = bold_candidates if bold else regular_candidates
+
+    for path in candidates:
+        if os.path.exists(path):
+            return ImageFont.truetype(path, size=size)
+
+    return ImageFont.load_default()
+
+
+def draw_centered_text(draw, box, text, font, fill):
+    x1, y1, x2, y2 = box
+    bbox = draw.textbbox((0, 0), text, font=font)
+    text_w = bbox[2] - bbox[0]
+    text_h = bbox[3] - bbox[1]
+    x = x1 + (x2 - x1 - text_w) / 2
+    y = y1 + (y2 - y1 - text_h) / 2 - 1
+    draw.text((x, y), text, font=font, fill=fill)
+
+
+def draw_table(draw, x, y, col_widths, header, rows, row_h=42):
+    header_bg = "#0b3a63"
+    cell_bg = "#dedede"
+    border = "#1f1f1f"
+    header_text = "#ffffff"
+    cell_text = "#222222"
+
+    font_header = load_font(size=16, bold=True)
+    font_cell = load_font(size=16, bold=False)
+
+    total_width = sum(col_widths)
+
+    # Header
+    cx = x
+    for i, title in enumerate(header):
+        box = (cx, y, cx + col_widths[i], y + row_h)
+        draw.rectangle(box, fill=header_bg, outline=border, width=1)
+        draw_centered_text(draw, box, title, font_header, header_text)
+        cx += col_widths[i]
+
+    # Rows
+    current_y = y + row_h
+    for row in rows:
+        cx = x
+        for i, value in enumerate(row):
+            box = (cx, current_y, cx + col_widths[i], current_y + row_h)
+            draw.rectangle(box, fill=cell_bg, outline=border, width=1)
+            draw_centered_text(draw, box, str(value), font_cell, cell_text)
+            cx += col_widths[i]
+        current_y += row_h
+
+    return x + total_width, current_y
+
+
+def generate_checks_png(checks, avg_date, total_amount):
+    included_checks = get_included_checks(checks)
+
+    qty = len(included_checks)
+    total_amount_text = format_amount_plain(total_amount)
+    avg_date_text = format_date_tr(avg_date) if avg_date else "-"
+
+    top_header = ["Qty - Adet", "Toplam Tutar", "Ortalama Vade"]
+    top_rows = [[qty, total_amount_text, avg_date_text]]
+
+    bottom_header = ["No - Sira", "Cek Tutari", "Vade"]
+    bottom_rows = []
+
+    for idx, row in enumerate(included_checks, start=1):
+        bottom_rows.append([
+            idx,
+            format_amount_plain(row["amount"]),
+            format_date_tr(row["due_date"])
+        ])
+
+    if not bottom_rows:
+        bottom_rows = [["-", "-", "-"]]
+
+    top_col_widths = [110, 170, 170]
+    bottom_col_widths = [110, 170, 170]
+
+    row_h = 42
+    gap = 18
+    margin = 18
+
+    width = margin * 2 + max(sum(top_col_widths), sum(bottom_col_widths))
+    height = (
+        margin
+        + row_h * (1 + len(top_rows))
+        + gap
+        + row_h * (1 + len(bottom_rows))
+        + margin
+    )
+
+    image = Image.new("RGB", (width, height), "white")
+    draw = ImageDraw.Draw(image)
+
+    _, current_y = draw_table(
+        draw=draw,
+        x=margin,
+        y=margin,
+        col_widths=top_col_widths,
+        header=top_header,
+        rows=top_rows,
+        row_h=row_h
+    )
+
+    current_y += gap
+
+    draw_table(
+        draw=draw,
+        x=margin,
+        y=current_y,
+        col_widths=bottom_col_widths,
+        header=bottom_header,
+        rows=bottom_rows,
+        row_h=row_h
+    )
+
+    buf = io.BytesIO()
+    image.save(buf, format="PNG")
+    buf.seek(0)
+    return buf
 
 
 # --------------------------------------------------
@@ -188,7 +345,6 @@ st.markdown("""
         margin-bottom: 14px;
     }
 
-    /* Buttons */
     div[data-testid="stButton"] > button {
         border-radius: 12px !important;
         border: 1px solid #d6d2d8 !important;
@@ -218,7 +374,6 @@ st.markdown("""
         margin-top: 8px;
     }
 
-    /* TEXT INPUT - TUTAR */
     div[data-baseweb="input"] {
         height: 50px !important;
     }
@@ -251,7 +406,6 @@ st.markdown("""
         box-shadow: none !important;
     }
 
-    /* DATE INPUT - VADE */
     .stDateInput > div {
         height: 50px !important;
     }
@@ -278,13 +432,11 @@ st.markdown("""
         padding-bottom: 0 !important;
     }
 
-    /* Checkbox alignment */
     div[data-testid="stCheckbox"] {
         padding-top: 8px;
     }
 </style>
 """, unsafe_allow_html=True)
-
 
 # --------------------------------------------------
 # HEADER
@@ -296,7 +448,6 @@ if st.button("🗑 Listeyi Temizle", key="clear_btn"):
     clear_all()
     st.rerun()
 st.markdown('</div>', unsafe_allow_html=True)
-
 
 # --------------------------------------------------
 # MAIN LAYOUT
@@ -402,4 +553,13 @@ with right_col:
         </div>
         """,
         unsafe_allow_html=True
+    )
+
+    png_data = generate_checks_png(st.session_state.checks, avg_date, total_amount)
+
+    st.download_button(
+        label="PNG Olarak İndir",
+        data=png_data,
+        file_name="cek_ozet.png",
+        mime="image/png"
     )
