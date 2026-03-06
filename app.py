@@ -245,26 +245,45 @@ def normalize_amount_field(item_id):
 st.markdown("""
 <style>
 .block-container {
-    max-width: 1080px;
-    padding-top: 3.4rem;
-    padding-bottom: 0.6rem;
+    max-width: 1000px;
+    padding-top: 2.2rem;
+    padding-bottom: 0.8rem;
 }
 
+/* Başlık */
 h1 {
-    margin: 0 0 0.9rem 0 !important;
+    margin: 0 0 1rem 0 !important;
     padding: 0 !important;
     line-height: 1.04 !important;
-    font-size: 2.55rem !important;
+    font-size: 2.25rem !important;
+    letter-spacing: -0.5px;
 }
 
+/* Dar ana çalışma alanı */
+.compact-shell {
+    max-width: 620px;
+}
+
+/* Başlıklar */
 .section-title {
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 700;
-    margin-bottom: 6px;
+    margin: 0 0 0.45rem 0;
 }
 
+/* Grid başlıkları */
 .header-box {
-    height: 20px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+    color: #1f2937;
+    font-size: 11px;
+}
+
+/* Satır no */
+.row-no-box {
+    height: 28px;
     display: flex;
     align-items: center;
     font-weight: 700;
@@ -272,31 +291,39 @@ h1 {
     font-size: 12px;
 }
 
-.row-no-box {
-    height: 28px;
-    display: flex;
-    align-items: center;
-    font-weight: 700;
-    color: #1f2937;
-    font-size: 13px;
-}
-
+/* Ayraç */
 .row-divider {
     border-bottom: 1px solid #e5e7eb;
     margin: 4px 0 6px 0;
 }
 
+/* Metric kartları */
 div[data-testid="stMetric"] {
     border: 1px solid #d1d5db;
     border-radius: 12px;
     padding: 10px 12px;
 }
 
+/* input üst boşluklarını öldür */
 div[data-testid="stTextInput"] > div,
 div[data-testid="stDateInput"] > div {
     margin-top: 0 !important;
 }
 
+/* input yükseklik eşitleme */
+.stTextInput input,
+.stDateInput input {
+    height: 28px !important;
+    min-height: 28px !important;
+    font-size: 12px !important;
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    border-radius: 8px !important;
+}
+
+/* checkbox sola yakın */
 div[data-testid="stCheckbox"] {
     display: flex;
     justify-content: flex-start;
@@ -312,25 +339,28 @@ div[data-testid="stCheckbox"] label {
     padding-left: 0 !important;
 }
 
-.stTextInput input,
-.stDateInput input {
-    height: 28px !important;
-    min-height: 28px !important;
-    font-size: 12px !important;
-    padding-top: 4px !important;
-    padding-bottom: 4px !important;
-    padding-left: 8px !important;
-    padding-right: 8px !important;
-}
-
+/* küçük ikon buton */
 .small-icon-btn button {
-    width: 56px !important;
-    min-width: 56px !important;
-    max-width: 56px !important;
+    width: 44px !important;
+    min-width: 44px !important;
+    max-width: 44px !important;
     height: 34px !important;
     min-height: 34px !important;
+    max-height: 34px !important;
     padding: 0 !important;
     font-size: 16px !important;
+    border-radius: 10px !important;
+}
+
+/* buton satırı */
+.icon-row {
+    margin-bottom: 0.9rem;
+}
+
+/* özet alt blok */
+.summary-shell {
+    max-width: 620px;
+    margin-top: 1rem;
 }
 
 .note-text {
@@ -340,30 +370,37 @@ div[data-testid="stCheckbox"] label {
 
 @media (max-width: 768px) {
     .block-container {
-        padding-top: 1.6rem;
-        padding-left: 0.45rem;
-        padding-right: 0.45rem;
+        max-width: 100%;
+        padding-top: 1.2rem;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
         padding-bottom: 0.5rem;
     }
 
     h1 {
-        font-size: 1.85rem !important;
+        font-size: 1.75rem !important;
         line-height: 1.02 !important;
-        margin-bottom: 0.75rem !important;
+        margin-bottom: 0.85rem !important;
+        letter-spacing: -0.3px;
+    }
+
+    .compact-shell,
+    .summary-shell {
+        max-width: 100%;
     }
 
     .section-title {
         font-size: 15px;
-        margin-bottom: 5px;
+        margin-bottom: 0.35rem;
     }
 
     .header-box {
         font-size: 10px;
-        height: 18px;
+        height: 16px;
     }
 
     .row-no-box {
-        font-size: 12px;
+        font-size: 11px;
         height: 26px;
     }
 
@@ -381,69 +418,69 @@ div[data-testid="stCheckbox"] label {
     }
 
     .small-icon-btn button {
-        width: 50px !important;
-        min-width: 50px !important;
-        max-width: 50px !important;
+        width: 40px !important;
+        min-width: 40px !important;
+        max-width: 40px !important;
         height: 32px !important;
         min-height: 32px !important;
+        max-height: 32px !important;
         font-size: 15px !important;
     }
 }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("Çek Ortalama Vade Hesaplayıcı")
+st.title("Ortalama Vade Hesaplayıcı")
+
+st.markdown('<div class="compact-shell">', unsafe_allow_html=True)
 
 # -------------------------------------------------
-# Üst buton
+# Üst ikon buton
 # -------------------------------------------------
-top_btn_col, _ = st.columns([0.10, 1.90], gap="small")
-with top_btn_col:
+st.markdown('<div class="icon-row">', unsafe_allow_html=True)
+icon_cols_top = st.columns([0.08, 0.92], gap="small")
+with icon_cols_top[0]:
     st.markdown('<div class="small-icon-btn">', unsafe_allow_html=True)
     if st.button("🗑️", use_container_width=True):
         clear_all()
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
 # -------------------------------------------------
-# Ana layout
+# Çek listesi
 # -------------------------------------------------
-left_col, right_col = st.columns([1.18, 0.52], gap="medium")
+st.markdown('<div class="section-title">Çek Listesi</div>', unsafe_allow_html=True)
 
-# -------------------------------------------------
-# Sol panel
-# -------------------------------------------------
-with left_col:
-    st.markdown('<div class="section-title">Çek Listesi</div>', unsafe_allow_html=True)
+# Sıra / Tutar / Vade / Dahil
+header_cols = st.columns([0.09, 0.24, 0.18, 0.06, 0.43], gap="small")
+header_cols[0].markdown('<div class="header-box">Sıra</div>', unsafe_allow_html=True)
+header_cols[1].markdown('<div class="header-box">Tutar (TL)</div>', unsafe_allow_html=True)
+header_cols[2].markdown('<div class="header-box">Vade Tarihi</div>', unsafe_allow_html=True)
+header_cols[3].markdown('<div class="header-box">Dahil</div>', unsafe_allow_html=True)
 
-    # Daha sıkı, daha dar, checkbox sola yakın
-    h1, h2, h3, h4 = st.columns([0.12, 0.42, 0.42, 0.06], vertical_alignment="center")
-    h1.markdown('<div class="header-box">Sıra</div>', unsafe_allow_html=True)
-    h2.markdown('<div class="header-box">Tutar (TL)</div>', unsafe_allow_html=True)
-    h3.markdown('<div class="header-box">Vade Tarihi</div>', unsafe_allow_html=True)
-    h4.markdown('<div class="header-box">Dahil</div>', unsafe_allow_html=True)
+updated_checks = []
 
-    updated_checks = []
+for i, item in enumerate(st.session_state.checks, start=1):
+    row_cols = st.columns([0.09, 0.24, 0.18, 0.06, 0.43], gap="small")
 
-    for i, item in enumerate(st.session_state.checks, start=1):
-        c1, c2, c3, c4 = st.columns([0.12, 0.42, 0.42, 0.06], vertical_alignment="center")
+    amount_key = f"amount_{item['id']}"
+    due_key = f"due_{item['id']}"
+    active_key = f"active_{item['id']}"
 
-        amount_key = f"amount_{item['id']}"
-        due_key = f"due_{item['id']}"
-        active_key = f"active_{item['id']}"
+    if amount_key not in st.session_state:
+        st.session_state[amount_key] = item["amount_text"]
 
-        if amount_key not in st.session_state:
-            st.session_state[amount_key] = item["amount_text"]
+    if due_key not in st.session_state:
+        st.session_state[due_key] = item["due_date"]
 
-        if due_key not in st.session_state:
-            st.session_state[due_key] = item["due_date"]
+    if active_key not in st.session_state:
+        st.session_state[active_key] = item["active"]
 
-        if active_key not in st.session_state:
-            st.session_state[active_key] = item["active"]
+    row_cols[0].markdown(f'<div class="row-no-box">#{i}</div>', unsafe_allow_html=True)
 
-        c1.markdown(f'<div class="row-no-box">#{i}</div>', unsafe_allow_html=True)
-
-        c2.text_input(
+    with row_cols[1]:
+        st.text_input(
             label="",
             key=amount_key,
             placeholder="1.230.000",
@@ -452,39 +489,46 @@ with left_col:
             label_visibility="collapsed"
         )
 
-        c3.date_input(
+    with row_cols[2]:
+        st.date_input(
             label="",
             key=due_key,
             format="DD.MM.YYYY",
             label_visibility="collapsed"
         )
 
-        c4.checkbox(
+    with row_cols[3]:
+        st.checkbox(
             label="",
             key=active_key,
             label_visibility="collapsed"
         )
 
-        st.markdown('<div class="row-divider"></div>', unsafe_allow_html=True)
+    st.markdown('<div class="row-divider"></div>', unsafe_allow_html=True)
 
-        updated_checks.append(
-            {
-                "id": item["id"],
-                "active": st.session_state[active_key],
-                "amount_text": st.session_state[amount_key],
-                "due_date": st.session_state[due_key]
-            }
-        )
+    updated_checks.append(
+        {
+            "id": item["id"],
+            "active": st.session_state[active_key],
+            "amount_text": st.session_state[amount_key],
+            "due_date": st.session_state[due_key]
+        }
+    )
 
-    st.session_state.checks = updated_checks
+st.session_state.checks = updated_checks
 
-    add_btn_col, _ = st.columns([0.10, 1.90], gap="small")
-    with add_btn_col:
-        st.markdown('<div class="small-icon-btn">', unsafe_allow_html=True)
-        if st.button("➕", key="bottom_add_button", use_container_width=True):
-            add_check()
-            st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
+# -------------------------------------------------
+# Alt ikon buton
+# -------------------------------------------------
+icon_cols_bottom = st.columns([0.08, 0.92], gap="small")
+with icon_cols_bottom[0]:
+    st.markdown('<div class="small-icon-btn">', unsafe_allow_html=True)
+    if st.button("➕", key="bottom_add_button", use_container_width=True):
+        add_check()
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+
+st.markdown('</div>', unsafe_allow_html=True)
 
 # -------------------------------------------------
 # Hesaplama
@@ -532,39 +576,42 @@ png_bytes = generate_summary_png(
 )
 
 # -------------------------------------------------
-# Sağ panel
+# Alt özet
 # -------------------------------------------------
-with right_col:
-    st.markdown('<div class="section-title">Hesap Özeti</div>', unsafe_allow_html=True)
+st.markdown('<div class="summary-shell">', unsafe_allow_html=True)
+st.markdown('<div class="section-title">Hesap Özeti</div>', unsafe_allow_html=True)
 
-    st.metric("Toplam Çek Tutarı", format_tl(total_amount))
+metric_cols = st.columns(3, gap="small")
+with metric_cols[0]:
+    st.metric("Toplam Tutar", format_tl(total_amount))
+with metric_cols[1]:
+    st.metric("Ortalama Vade", format_date_tr(avg_due_date) if avg_due_date else "-")
+with metric_cols[2]:
+    st.metric("Kalan Gün", f"{remaining_days} gün" if remaining_days is not None else "-")
 
-    if avg_due_date:
-        st.metric("Ortalama Vade", format_date_tr(avg_due_date))
-        st.metric("Kalan Gün", f"{remaining_days} gün")
-    else:
-        st.metric("Ortalama Vade", "-")
-        st.metric("Kalan Gün", "-")
+st.markdown("")
 
-    st.markdown("---")
+meta_cols = st.columns(2, gap="small")
+with meta_cols[0]:
     st.write(f"**Toplam Kalem:** {len(st.session_state.checks)}")
-    st.write(f"**Hesaba Dahil Çek:** {len(active_checks)}")
+with meta_cols[1]:
+    st.write(f"**Hesaba Dahil:** {len(active_checks)}")
 
-    st.markdown("---")
-    st.markdown("**PNG Özet Çıktı**")
-    st.image(png_bytes, use_container_width=False)
+st.markdown("---")
+st.markdown("**PNG Özet Çıktı**")
+st.image(png_bytes, use_container_width=False)
 
-    file_name = f"cek_ozet_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
-    st.download_button(
-        label="PNG İndir",
-        data=png_bytes,
-        file_name=file_name,
-        mime="image/png",
-        use_container_width=True
-    )
+file_name = f"cek_ozet_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+st.download_button(
+    label="PNG İndir",
+    data=png_bytes,
+    file_name=file_name,
+    mime="image/png",
+    use_container_width=True
+)
 
-    st.markdown("---")
-    st.markdown(
-        '<div class="note-text">PNG çıktıda sadece hesaba dahil edilen çekler yer alır.</div>',
-        unsafe_allow_html=True
-    )
+st.markdown(
+    '<div class="note-text">PNG çıktıda sadece hesaba dahil edilen çekler yer alır.</div>',
+    unsafe_allow_html=True
+)
+st.markdown('</div>', unsafe_allow_html=True)
