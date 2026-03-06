@@ -194,10 +194,10 @@ def generate_checks_png(checks, avg_date, total_amount):
     total_amount_text = format_amount_plain(total_amount)
     avg_date_text = format_date_tr(avg_date) if avg_date else "-"
 
-    top_header = ["Qty - Adet", "Toplam Tutar", "Ortalama Vade"]
+    top_header = ["Adet", "Toplam Tutar (TL)", "Ortalama Vade"]
     top_rows = [[qty, total_amount_text, avg_date_text]]
 
-    bottom_header = ["No - Sira", "Cek Tutari", "Vade"]
+    bottom_header = ["Sira", "Cek Tutari (TL)", "Vade"]
     bottom_rows = []
 
     for idx, row in enumerate(included_checks, start=1):
