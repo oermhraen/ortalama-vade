@@ -245,26 +245,35 @@ def normalize_amount_field(item_id):
 st.markdown("""
 <style>
 .block-container {
-    max-width: 1180px;
-    padding-top: 3.2rem;
-    padding-bottom: 0.8rem;
+    max-width: 1080px;
+    padding-top: 3.4rem;
+    padding-bottom: 0.6rem;
 }
 
 h1 {
-    margin: 0 0 1rem 0 !important;
+    margin: 0 0 0.9rem 0 !important;
     padding: 0 !important;
-    line-height: 1.05 !important;
-    font-size: 2.75rem !important;
+    line-height: 1.04 !important;
+    font-size: 2.55rem !important;
 }
 
 .section-title {
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 700;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .header-box {
-    height: 22px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+    color: #1f2937;
+    font-size: 12px;
+}
+
+.row-no-box {
+    height: 28px;
     display: flex;
     align-items: center;
     font-weight: 700;
@@ -272,18 +281,9 @@ h1 {
     font-size: 13px;
 }
 
-.row-no-box {
-    height: 30px;
-    display: flex;
-    align-items: center;
-    font-weight: 700;
-    color: #1f2937;
-    font-size: 14px;
-}
-
 .row-divider {
     border-bottom: 1px solid #e5e7eb;
-    margin: 5px 0 7px 0;
+    margin: 4px 0 6px 0;
 }
 
 div[data-testid="stMetric"] {
@@ -299,21 +299,38 @@ div[data-testid="stDateInput"] > div {
 
 div[data-testid="stCheckbox"] {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
-    height: 30px;
+    height: 28px;
     margin-top: 0 !important;
-    padding-top: 2px;
+    padding-top: 1px;
+    padding-left: 0 !important;
 }
 
 div[data-testid="stCheckbox"] label {
     margin-bottom: 0 !important;
+    padding-left: 0 !important;
 }
 
 .stTextInput input,
 .stDateInput input {
-    height: 30px !important;
+    height: 28px !important;
+    min-height: 28px !important;
     font-size: 12px !important;
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+}
+
+.small-icon-btn button {
+    width: 56px !important;
+    min-width: 56px !important;
+    max-width: 56px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 !important;
+    font-size: 16px !important;
 }
 
 .note-text {
@@ -324,20 +341,20 @@ div[data-testid="stCheckbox"] label {
 @media (max-width: 768px) {
     .block-container {
         padding-top: 1.6rem;
-        padding-left: 0.5rem;
-        padding-right: 0.5rem;
-        padding-bottom: 0.6rem;
+        padding-left: 0.45rem;
+        padding-right: 0.45rem;
+        padding-bottom: 0.5rem;
     }
 
     h1 {
-        font-size: 1.95rem !important;
+        font-size: 1.85rem !important;
         line-height: 1.02 !important;
-        margin-bottom: 0.8rem !important;
+        margin-bottom: 0.75rem !important;
     }
 
     .section-title {
-        font-size: 16px;
-        margin-bottom: 6px;
+        font-size: 15px;
+        margin-bottom: 5px;
     }
 
     .header-box {
@@ -347,24 +364,29 @@ div[data-testid="stCheckbox"] label {
 
     .row-no-box {
         font-size: 12px;
-        height: 28px;
+        height: 26px;
     }
 
     .stTextInput input,
     .stDateInput input {
-        height: 28px !important;
+        height: 26px !important;
+        min-height: 26px !important;
         font-size: 11px !important;
-        padding-left: 8px !important;
-        padding-right: 8px !important;
+        padding-left: 6px !important;
+        padding-right: 6px !important;
     }
 
     div[data-testid="stMetric"] {
         padding: 8px 10px;
     }
 
-    .stButton > button {
-        height: 36px;
-        font-size: 13px;
+    .small-icon-btn button {
+        width: 50px !important;
+        min-width: 50px !important;
+        max-width: 50px !important;
+        height: 32px !important;
+        min-height: 32px !important;
+        font-size: 15px !important;
     }
 }
 </style>
@@ -375,16 +397,18 @@ st.title("Çek Ortalama Vade Hesaplayıcı")
 # -------------------------------------------------
 # Üst buton
 # -------------------------------------------------
-btn_left, btn_right = st.columns([0.78, 1.6], gap="small")
-with btn_left:
-    if st.button("🗑️ Temizle", use_container_width=True):
+top_btn_col, _ = st.columns([0.10, 1.90], gap="small")
+with top_btn_col:
+    st.markdown('<div class="small-icon-btn">', unsafe_allow_html=True)
+    if st.button("🗑️", use_container_width=True):
         clear_all()
         st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # -------------------------------------------------
 # Ana layout
 # -------------------------------------------------
-left_col, right_col = st.columns([1.35, 0.62], gap="medium")
+left_col, right_col = st.columns([1.18, 0.52], gap="medium")
 
 # -------------------------------------------------
 # Sol panel
@@ -392,8 +416,8 @@ left_col, right_col = st.columns([1.35, 0.62], gap="medium")
 with left_col:
     st.markdown('<div class="section-title">Çek Listesi</div>', unsafe_allow_html=True)
 
-    # Daha sert kompakt oranlar
-    h1, h2, h3, h4 = st.columns([0.18, 0.56, 0.56, 0.10], vertical_alignment="center")
+    # Daha sıkı, daha dar, checkbox sola yakın
+    h1, h2, h3, h4 = st.columns([0.12, 0.42, 0.42, 0.06], vertical_alignment="center")
     h1.markdown('<div class="header-box">Sıra</div>', unsafe_allow_html=True)
     h2.markdown('<div class="header-box">Tutar (TL)</div>', unsafe_allow_html=True)
     h3.markdown('<div class="header-box">Vade Tarihi</div>', unsafe_allow_html=True)
@@ -402,7 +426,7 @@ with left_col:
     updated_checks = []
 
     for i, item in enumerate(st.session_state.checks, start=1):
-        c1, c2, c3, c4 = st.columns([0.18, 0.56, 0.56, 0.10], vertical_alignment="center")
+        c1, c2, c3, c4 = st.columns([0.12, 0.42, 0.42, 0.06], vertical_alignment="center")
 
         amount_key = f"amount_{item['id']}"
         due_key = f"due_{item['id']}"
@@ -454,11 +478,13 @@ with left_col:
 
     st.session_state.checks = updated_checks
 
-    add_left, add_right = st.columns([0.78, 1.6], gap="small")
-    with add_left:
-        if st.button("➕ Yeni Çek Ekle", key="bottom_add_button", use_container_width=True):
+    add_btn_col, _ = st.columns([0.10, 1.90], gap="small")
+    with add_btn_col:
+        st.markdown('<div class="small-icon-btn">', unsafe_allow_html=True)
+        if st.button("➕", key="bottom_add_button", use_container_width=True):
             add_check()
             st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
 # -------------------------------------------------
 # Hesaplama
