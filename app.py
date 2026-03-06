@@ -24,26 +24,28 @@ if "checks" not in st.session_state:
         default_row()
     ]
 
+
 # --------------------------------------------------
 # HELPERS
 # --------------------------------------------------
 def format_tl(value: float) -> str:
     try:
         return f"{value:,.0f}".replace(",", ".") + " TL"
-    except:
+    except Exception:
         return "0 TL"
+
 
 def format_date_tr(d: date) -> str:
     return d.strftime("%d.%m.%Y")
 
+
 def parse_amount(value: str) -> float:
     """
-    Kullanıcı girişini sayıya çevirir.
-    Örnek destekler:
-    - 1000000
-    - 1.000.000
-    - 1,000,000
-    - 1 000 000
+    Desteklenen örnek girişler:
+    1000000
+    1.000.000
+    1,000,000
+    1 000 000
     """
     if value is None:
         return 0.0
@@ -64,10 +66,12 @@ def parse_amount(value: str) -> float:
 
     return float(digits_only)
 
+
 def amount_input_display(value: float) -> str:
     if not value:
         return "0"
     return f"{int(value):,}".replace(",", ".")
+
 
 def calculate_weighted_average_maturity(checks):
     valid_checks = [
@@ -95,14 +99,17 @@ def calculate_weighted_average_maturity(checks):
 
     return avg_date, total_amount, avg_days
 
+
 # --------------------------------------------------
 # ACTIONS
 # --------------------------------------------------
 def clear_all():
     st.session_state.checks = [default_row()]
 
+
 def add_new_row():
     st.session_state.checks.append(default_row())
+
 
 # --------------------------------------------------
 # STYLE
@@ -111,6 +118,12 @@ st.markdown("""
 <style>
     .stApp {
         background-color: #f7f7f8;
+    }
+
+    .block-container {
+        padding-top: 24px;
+        padding-bottom: 24px;
+        max-width: 1200px;
     }
 
     .main-title {
@@ -134,6 +147,13 @@ st.markdown("""
         font-weight: 700;
         color: #232733;
         margin-bottom: 8px;
+    }
+
+    .serial-box {
+        font-size: 22px;
+        font-weight: 700;
+        color: #232733;
+        padding-top: 8px;
     }
 
     .summary-card {
@@ -168,47 +188,7 @@ st.markdown("""
         margin-bottom: 14px;
     }
 
-    .serial-box {
-        font-size: 22px;
-        font-weight: 700;
-        color: #232733;
-        padding-top: 8px;
-    }
-
-    .block-container {
-        padding-top: 24px;
-        padding-bottom: 24px;
-        max-width: 1200px;
-    }
-
-    div[data-baseweb="input"] input {
-        background: #ecebed !important;
-        border-radius: 10px !important;
-        border: 1px solid #ecebed !important;
-        color: #232733 !important;
-        font-size: 16px !important;
-        font-weight: 600 !important;
-        height: 50px !important;
-    }
-
-    div[data-baseweb="input"] input:focus {
-        border: 1px solid #d8d2da !important;
-        box-shadow: none !important;
-    }
-
-    .stDateInput > div > div {
-        background: #ecebed !important;
-        border-radius: 10px !important;
-        border: 1px solid #ecebed !important;
-        height: 50px !important;
-    }
-
-    .stDateInput input {
-        font-size: 16px !important;
-        font-weight: 600 !important;
-        color: #232733 !important;
-    }
-
+    /* Buttons */
     div[data-testid="stButton"] > button {
         border-radius: 12px !important;
         border: 1px solid #d6d2d8 !important;
@@ -237,8 +217,74 @@ st.markdown("""
         max-width: 220px;
         margin-top: 8px;
     }
+
+    /* TEXT INPUT - TUTAR */
+    div[data-baseweb="input"] {
+        height: 50px !important;
+    }
+
+    div[data-baseweb="input"] > div {
+        height: 50px !important;
+        min-height: 50px !important;
+        background: #ecebed !important;
+        border-radius: 10px !important;
+        border: 1px solid #ecebed !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    div[data-baseweb="input"] input {
+        height: 50px !important;
+        line-height: 50px !important;
+        background: #ecebed !important;
+        border: none !important;
+        color: #232733 !important;
+        font-size: 16px !important;
+        font-weight: 600 !important;
+        box-sizing: border-box !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    div[data-baseweb="input"] input:focus {
+        box-shadow: none !important;
+    }
+
+    /* DATE INPUT - VADE */
+    .stDateInput > div {
+        height: 50px !important;
+    }
+
+    .stDateInput > div > div {
+        height: 50px !important;
+        min-height: 50px !important;
+        background: #ecebed !important;
+        border-radius: 10px !important;
+        border: 1px solid #ecebed !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    .stDateInput input {
+        height: 50px !important;
+        line-height: 50px !important;
+        color: #232733 !important;
+        font-size: 16px !important;
+        font-weight: 600 !important;
+        box-sizing: border-box !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    /* Checkbox alignment */
+    div[data-testid="stCheckbox"] {
+        padding-top: 8px;
+    }
 </style>
 """, unsafe_allow_html=True)
+
 
 # --------------------------------------------------
 # HEADER
@@ -250,6 +296,7 @@ if st.button("🗑 Listeyi Temizle", key="clear_btn"):
     clear_all()
     st.rerun()
 st.markdown('</div>', unsafe_allow_html=True)
+
 
 # --------------------------------------------------
 # MAIN LAYOUT
