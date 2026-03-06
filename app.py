@@ -43,7 +43,7 @@ def format_tl(value):
         return "0 TL"
 
 
-def format_tl_no_suffix(value):
+def format_plain_amount(value):
     try:
         return f"{int(round(value)):,}".replace(",", ".")
     except:
@@ -55,21 +55,19 @@ def format_date_tr(d):
 
 
 def get_font(size=18, bold=False):
-    possible_fonts = [
+    candidates = [
         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
         "/usr/share/fonts/truetype/liberation2/LiberationSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf",
     ]
-
-    for font_path in possible_fonts:
+    for path in candidates:
         try:
-            return ImageFont.truetype(font_path, size=size)
+            return ImageFont.truetype(path, size=size)
         except:
             pass
-
     return ImageFont.load_default()
 
 
-def draw_centered_text(draw, box, text, font, fill):
+def draw_text_center(draw, box, text, font, fill):
     x1, y1, x2, y2 = box
     bbox = draw.textbbox((0, 0), text, font=font)
     tw = bbox[2] - bbox[0]
@@ -81,45 +79,42 @@ def draw_centered_text(draw, box, text, font, fill):
 
 def generate_summary_png(total_count, total_amount, avg_due_date, active_rows):
     """
-    Kompakt PNG özet görseli:
-    Üst blok: Adet | Toplam Tutar | Ortalama Vade
-    Alt blok: Sıra | Çek Tutarı | Vade Tarihi
+    Daha kompakt, daha dengeli PNG özet çıktısı üretir.
+    İngilizce başlıklar kullanılır.
     """
     if not active_rows:
-        active_rows = []
+        active_rows = [{"index": "-", "amount": 0, "due_date": "-"}]
 
-    row_count = max(len(active_rows), 1)
+    row_count = len(active_rows)
 
-    # Boyutlar
-    width = 900
-    top_header_h = 38
-    top_value_h = 42
-    gap_h = 10
-    table_header_h = 36
-    row_h = 34
-    height = top_header_h + top_value_h + gap_h + table_header_h + row_count * row_h + 2
+    # Kompakt ölçüler
+    width = 760
+    top_header_h = 32
+    top_value_h = 34
+    gap_h = 8
+    table_header_h = 32
+    row_h = 30
+    height = top_header_h + top_value_h + gap_h + table_header_h + (row_count * row_h)
 
-    # Renkler
-    navy = (22, 71, 113)
+    navy = (25, 77, 122)
     white = (255, 255, 255)
-    black = (0, 0, 0)
-    alt_fill = (242, 242, 242)
-    normal_fill = (255, 255, 255)
-    line = (0, 0, 0)
+    black = (18, 18, 18)
+    fill_alt = (242, 242, 242)
+    fill_white = (255, 255, 255)
+    border = (0, 0, 0)
 
-    # Fontlar
-    font_header = get_font(18, bold=True)
-    font_value = get_font(19, bold=False)
-    font_value_bold = get_font(19, bold=True)
-    font_cell = get_font(17, bold=False)
-    font_cell_bold = get_font(17, bold=True)
+    font_header = get_font(16, bold=True)
+    font_value = get_font(17, bold=False)
+    font_value_bold = get_font(17, bold=True)
+    font_cell = get_font(16, bold=False)
+    font_cell_bold = get_font(16, bold=True)
 
     img = Image.new("RGB", (width, height), white)
     draw = ImageDraw.Draw(img)
 
     # Üst özet kolonları
-    c1 = 160
-    c2 = 350
+    c1 = 120
+    c2 = 280
     c3 = width - c1 - c2
 
     x0 = 0
@@ -127,34 +122,38 @@ def generate_summary_png(total_count, total_amount, avg_due_date, active_rows):
     x2 = c1 + c2
     x3 = width
 
-    # Üst başlık
-    top_header_boxes = [
-        (x0, 0, x1, top_header_h, "Adet"),
-        (x1, 0, x2, top_header_h, "Toplam Tutar"),
-        (x2, 0, x3, top_header_h, "Ortalama Vade"),
+    top_labels = [
+        (x0, 0, x1, top_header_h, "Qty"),
+        (x1, 0, x2, top_header_h, "Total Amount"),
+        (x2, 0, x3, top_header_h, "Avg. Due Date"),
     ]
 
-    for bx1, by1, bx2, by2, label in top_header_boxes:
-        draw.rectangle([bx1, by1, bx2, by2], fill=navy, outline=line, width=1)
-        draw_centered_text(draw, (bx1, by1, bx2, by2), label, font_header, white)
+    for bx1, by1, bx2, by2, label in top_labels:
+        draw.rectangle([bx1, by1, bx2, by2], fill=navy, outline=border, width=1)
+        draw_text_center(draw, (bx1, by1, bx2, by2), label, font_header, white)
 
-    # Üst değer satırı
     avg_text = format_date_tr(avg_due_date) if avg_due_date else "-"
-    top_value_boxes = [
+    top_values = [
         (x0, top_header_h, x1, top_header_h + top_value_h, str(total_count)),
-        (x1, top_header_h, x2, top_header_h + top_value_h, format_tl_no_suffix(total_amount)),
+        (x1, top_header_h, x2, top_header_h + top_value_h, format_plain_amount(total_amount)),
         (x2, top_header_h, x3, top_header_h + top_value_h, avg_text),
     ]
 
-    for bx1, by1, bx2, by2, value in top_value_boxes:
-        draw.rectangle([bx1, by1, bx2, by2], fill=white, outline=line, width=1)
-        draw_centered_text(draw, (bx1, by1, bx2, by2), value, font_value_bold if bx1 == x1 else font_value, black)
+    for bx1, by1, bx2, by2, value in top_values:
+        draw.rectangle([bx1, by1, bx2, by2], fill=fill_white, outline=border, width=1)
+        draw_text_center(
+            draw,
+            (bx1, by1, bx2, by2),
+            value,
+            font_value_bold if bx1 == x1 else font_value,
+            black
+        )
 
     # Alt tablo
     start_y = top_header_h + top_value_h + gap_h
 
-    d1 = 110
-    d2 = 420
+    d1 = 90
+    d2 = 340
     d3 = width - d1 - d2
 
     dx0 = 0
@@ -162,46 +161,36 @@ def generate_summary_png(total_count, total_amount, avg_due_date, active_rows):
     dx2 = d1 + d2
     dx3 = width
 
-    table_header_boxes = [
-        (dx0, start_y, dx1, start_y + table_header_h, "Sıra"),
-        (dx1, start_y, dx2, start_y + table_header_h, "Çek Tutarı"),
-        (dx2, start_y, dx3, start_y + table_header_h, "Vade Tarihi"),
+    detail_labels = [
+        (dx0, start_y, dx1, start_y + table_header_h, "No"),
+        (dx1, start_y, dx2, start_y + table_header_h, "Check Amount"),
+        (dx2, start_y, dx3, start_y + table_header_h, "Due Date"),
     ]
 
-    for bx1, by1, bx2, by2, label in table_header_boxes:
-        draw.rectangle([bx1, by1, bx2, by2], fill=navy, outline=line, width=1)
-        draw_centered_text(draw, (bx1, by1, bx2, by2), label, font_header, white)
-
-    if not active_rows:
-        active_rows = [{"index": "-", "amount": 0, "due_date": "-"}]
+    for bx1, by1, bx2, by2, label in detail_labels:
+        draw.rectangle([bx1, by1, bx2, by2], fill=navy, outline=border, width=1)
+        draw_text_center(draw, (bx1, by1, bx2, by2), label, font_header, white)
 
     y = start_y + table_header_h
 
-    for idx, row in enumerate(active_rows):
-        fill = alt_fill if idx % 2 == 0 else normal_fill
+    for i, row in enumerate(active_rows):
+        fill = fill_alt if i % 2 == 0 else fill_white
 
-        row_boxes = [
+        row_values = [
             (dx0, y, dx1, y + row_h, str(row["index"])),
-            (dx1, y, dx2, y + row_h, format_tl_no_suffix(row["amount"])),
-            (
-                dx2,
-                y,
-                dx3,
-                y + row_h,
-                row["due_date"] if isinstance(row["due_date"], str) else format_date_tr(row["due_date"])
-            ),
+            (dx1, y, dx2, y + row_h, format_plain_amount(row["amount"])),
+            (dx2, y, dx3, y + row_h, row["due_date"] if isinstance(row["due_date"], str) else format_date_tr(row["due_date"])),
         ]
 
-        for bx1, by1, bx2, by2, value in row_boxes:
-            draw.rectangle([bx1, by1, bx2, by2], fill=fill, outline=line, width=1)
-            draw_centered_text(
+        for bx1, by1, bx2, by2, value in row_values:
+            draw.rectangle([bx1, by1, bx2, by2], fill=fill, outline=border, width=1)
+            draw_text_center(
                 draw,
                 (bx1, by1, bx2, by2),
                 value,
                 font_cell_bold if bx1 == dx1 else font_cell,
                 black
             )
-
         y += row_h
 
     output = BytesIO()
@@ -272,25 +261,35 @@ def normalize_amount_field(item_id):
 st.markdown("""
 <style>
 .block-container {
-    max-width: 1400px;
-    padding-top: 1.6rem;
+    max-width: 1360px;
+    padding-top: 2.2rem;
     padding-bottom: 1rem;
 }
 
 h1 {
-    margin-top: 0 !important;
-    padding-top: 0 !important;
-    line-height: 1.1 !important;
+    margin: 0 0 1.2rem 0 !important;
+    padding: 0 !important;
+    line-height: 1.08 !important;
+    font-size: 3.2rem !important;
 }
 
 .section-title {
     font-size: 20px;
     font-weight: 700;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 
 .header-box {
-    height: 28px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+    color: #1f2937;
+    font-size: 14px;
+}
+
+.row-no-box {
+    height: 34px;
     display: flex;
     align-items: center;
     font-weight: 700;
@@ -298,18 +297,9 @@ h1 {
     font-size: 15px;
 }
 
-.row-no-box {
-    height: 38px;
-    display: flex;
-    align-items: center;
-    font-weight: 700;
-    color: #1f2937;
-    font-size: 16px;
-}
-
 .row-divider {
     border-bottom: 1px solid #e5e7eb;
-    margin: 8px 0 10px 0;
+    margin: 6px 0 8px 0;
 }
 
 div[data-testid="stMetric"] {
@@ -327,17 +317,24 @@ div[data-testid="stCheckbox"] {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 38px;
+    height: 34px;
     margin-top: 0 !important;
-    padding-top: 6px;
+    padding-top: 4px;
 }
 
 div[data-testid="stCheckbox"] label {
     margin-bottom: 0 !important;
 }
 
-.stTextInput input, .stDateInput input {
-    height: 38px !important;
+.stTextInput input,
+.stDateInput input {
+    height: 34px !important;
+    font-size: 14px !important;
+}
+
+.top-action-wrap {
+    max-width: 420px;
+    margin-bottom: 1.2rem;
 }
 
 .note-text {
@@ -347,15 +344,16 @@ div[data-testid="stCheckbox"] label {
 
 @media (max-width: 768px) {
     .block-container {
-        padding-top: 1rem;
+        padding-top: 1.2rem;
         padding-left: 0.7rem;
         padding-right: 0.7rem;
         padding-bottom: 0.8rem;
     }
 
     h1 {
-        font-size: 2.2rem !important;
-        line-height: 1.08 !important;
+        font-size: 2.25rem !important;
+        line-height: 1.06 !important;
+        margin-bottom: 1rem !important;
     }
 
     .section-title {
@@ -365,17 +363,18 @@ div[data-testid="stCheckbox"] label {
 
     .header-box {
         font-size: 12px;
-        height: 24px;
+        height: 22px;
     }
 
     .row-no-box {
         font-size: 14px;
-        height: 36px;
+        height: 32px;
     }
 
-    .stTextInput input, .stDateInput input {
-        height: 36px !important;
-        font-size: 14px !important;
+    .stTextInput input,
+    .stDateInput input {
+        height: 32px !important;
+        font-size: 13px !important;
     }
 
     div[data-testid="stMetric"] {
@@ -383,8 +382,12 @@ div[data-testid="stCheckbox"] label {
     }
 
     .stButton > button {
-        height: 42px;
+        height: 40px;
         font-size: 15px;
+    }
+
+    .top-action-wrap {
+        max-width: 100%;
     }
 }
 </style>
@@ -393,29 +396,27 @@ div[data-testid="stCheckbox"] label {
 st.title("Çek Ortalama Vade Hesaplayıcı")
 
 # -------------------------------------------------
-# Üst butonlar
+# Üst buton
 # -------------------------------------------------
-top1, top2 = st.columns([1, 5])
-
-with top1:
-    if st.button("🗑️ Temizle", use_container_width=True):
-        clear_all()
-        st.rerun()
-
-st.markdown("")
+st.markdown('<div class="top-action-wrap">', unsafe_allow_html=True)
+if st.button("🗑️ Temizle", use_container_width=True):
+    clear_all()
+    st.rerun()
+st.markdown('</div>', unsafe_allow_html=True)
 
 # -------------------------------------------------
 # Ana layout
 # -------------------------------------------------
-left_col, right_col = st.columns([2.5, 1], gap="large")
+left_col, right_col = st.columns([2.2, 1], gap="large")
 
 # -------------------------------------------------
-# Sol panel - Çek listesi
+# Sol panel
 # -------------------------------------------------
 with left_col:
     st.markdown('<div class="section-title">Çek Listesi</div>', unsafe_allow_html=True)
 
-    h1, h2, h3, h4 = st.columns([0.7, 2.4, 1.7, 0.6], vertical_alignment="center")
+    # Eşit ve daha kompakt giriş alanları
+    h1, h2, h3, h4 = st.columns([0.55, 1.45, 1.45, 0.45], vertical_alignment="center")
     h1.markdown('<div class="header-box">Sıra</div>', unsafe_allow_html=True)
     h2.markdown('<div class="header-box">Tutar (TL)</div>', unsafe_allow_html=True)
     h3.markdown('<div class="header-box">Vade Tarihi</div>', unsafe_allow_html=True)
@@ -424,7 +425,7 @@ with left_col:
     updated_checks = []
 
     for i, item in enumerate(st.session_state.checks, start=1):
-        c1, c2, c3, c4 = st.columns([0.7, 2.4, 1.7, 0.6], vertical_alignment="center")
+        c1, c2, c3, c4 = st.columns([0.55, 1.45, 1.45, 0.45], vertical_alignment="center")
 
         amount_key = f"amount_{item['id']}"
         due_key = f"due_{item['id']}"
@@ -506,12 +507,10 @@ for idx, item in enumerate(st.session_state.checks, start=1):
 
 if active_checks:
     total_amount = sum(x["amount"] for x in active_checks)
-
     weighted_days_sum = sum(
         x["amount"] * ((x["due_date"] - today).days)
         for x in active_checks
     )
-
     avg_days = round(weighted_days_sum / total_amount)
     avg_due_date = today + timedelta(days=avg_days)
     remaining_days = (avg_due_date - today).days
@@ -528,7 +527,7 @@ png_bytes = generate_summary_png(
 )
 
 # -------------------------------------------------
-# Sağ panel - Özet
+# Sağ panel
 # -------------------------------------------------
 with right_col:
     st.markdown('<div class="section-title">Hesap Özeti</div>', unsafe_allow_html=True)
